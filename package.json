@@ -1,0 +1,29 @@
+{
+  "name": "percy-node",
+  "version": "0.1.0",
+  "description": "A node based javascript client for testing apps with node and percy. https://percy.io/",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "sso://user/ssahim/percy-node"
+  },
+  "keywords": [
+    "percy",
+    "node"
+  ],
+  "engines": {
+    "node": ">=7.8"
+  },
+  "author": "Susie Sahim <bogusred@paperdemon.com>",
+  "license": "MIT",
+  "dependencies": {
+    "crypto": "0.0.3",
+    "es6-promise-pool": "^2.4.6",
+    "globby": "^6.1.0",
+    "percy-client": "^2.1.3",
+    "walk": "^2.3.9"
+  }
+}
