@@ -1,9 +1,10 @@
-
 # percy-node
 
 This is a wrapper of [percy-js](https://github.com/percy/percy-js) that simplifies the API so it can be used for node based test workflows such as testing an express app, an Angular app, or AngularJS app.
 
 For more general information about Percy, visit [Percy's homepage](https://percy.io/)
+
+This is not an official Google product.
 
 ## How to use
 
