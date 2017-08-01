@@ -1,9 +1,16 @@
 
 # percy-node
 
-This is a wrapper of [percy-js]() that simplifies the API so it can be used for node based test workflows.
+This is a wrapper of [percy-js](https://github.com/percy/percy-js) that simplifies the API so it can be used for node based test workflows such as testing an express app, an Angular app, or AngularJS app.
+
+For more general information about Percy, visit [Percy's homepage](https://percy.io/)
 
 ## How to use
+
+npm install
+  git+https://webmaster.googlesource.com/percy-node
+ --save
+
 TODO(bogusred)
 
 ## Motivation
