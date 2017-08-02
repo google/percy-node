@@ -232,10 +232,10 @@ function snapshot(name, content, opt_breakpoints, opt_enableJs) {
     snapshotPromise.then((response) => {
       var snapshotId = response.body.data.id;
 
-    var missingResources = parseMissingResources(response);
-    uploadHtml(percyBuildData.id, snapshotId, htmlResource, missingResources,
-        resolveAfterHtmlResourceUploaded);
-  }, (error) => {
+      var missingResources = parseMissingResources(response);
+      uploadHtml(percyBuildData.id, snapshotId, htmlResource, missingResources,
+          resolveAfterHtmlResourceUploaded);
+    }, (error) => {
       // TODO: Exit with error exit code? May not want to silently let this
       // pass. Need to discuss as a team our strategy for handling failures with
       // percy and determine how reliable percy is.
@@ -286,7 +286,6 @@ async function finalizeBuild() {
     });
   } catch (err) {
     handlePercyFailure(err);
-    process.exit(2);
   }
 }
 
@@ -313,7 +312,7 @@ function gatherBuildResources(percyClient, buildDirs, rootDirs) {
     resourceUrl = absolutePath;
     rootDirs.forEach((rootDir) => {
       resourceUrl = resourceUrl.replace(rootDir, '');
-  });
+    });
     if (resourceUrl.charAt(0) !== '/') resourceUrl = '/' + resourceUrl;
     // Skip large files.
     if (fs.statSync(absolutePath)['size'] > MAX_FILE_SIZE_BYTES) {
@@ -360,8 +359,8 @@ async function uploadMissingResources(
       var promise = percyClient.uploadResource(buildId, content);
       promise.then((response) => {
         console.log(
-          `[percy] Uploaded new build resource: ${resource.resourceUrl}`);
-    }, handlePercyFailure);
+            `[percy] Uploaded new build resource: ${resource.resourceUrl}`);
+      }, handlePercyFailure);
       buildResourceUploadPromises.push(promise);
 
       return promise;
@@ -471,6 +470,7 @@ function handlePercyFailure(error) {
   console.error(
       `[percy][ERROR] API call failed, Percy has been disabled 
       for this build. ${error.toString()}`);
+  process.exit(2);
 }
 
 
