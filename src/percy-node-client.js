@@ -232,10 +232,10 @@ function snapshot(name, content, opt_breakpoints, opt_enableJs) {
     snapshotPromise.then((response) => {
       var snapshotId = response.body.data.id;
 
-    var missingResources = parseMissingResources(response);
-    uploadHtml(percyBuildData.id, snapshotId, htmlResource, missingResources,
-        resolveAfterHtmlResourceUploaded);
-  }, (error) => {
+      var missingResources = parseMissingResources(response);
+      uploadHtml(percyBuildData.id, snapshotId, htmlResource, missingResources,
+          resolveAfterHtmlResourceUploaded);
+    }, (error) => {
       // TODO: Exit with error exit code? May not want to silently let this
       // pass. Need to discuss as a team our strategy for handling failures with
       // percy and determine how reliable percy is.
@@ -286,7 +286,6 @@ async function finalizeBuild() {
     });
   } catch (err) {
     handlePercyFailure(err);
-    process.exit(2);
   }
 }
 
@@ -313,7 +312,7 @@ function gatherBuildResources(percyClient, buildDirs, rootDirs) {
     resourceUrl = absolutePath;
     rootDirs.forEach((rootDir) => {
       resourceUrl = resourceUrl.replace(rootDir, '');
-  });
+    });
     if (resourceUrl.charAt(0) !== '/') resourceUrl = '/' + resourceUrl;
     // Skip large files.
     if (fs.statSync(absolutePath)['size'] > MAX_FILE_SIZE_BYTES) {
@@ -341,7 +340,7 @@ function gatherBuildResources(percyClient, buildDirs, rootDirs) {
  * already have cached on its servers.
  * @param {number} buildId
  * @param {Array<{id: number}>} missingResources
- * @param resourceManifestDict
+ * @param {Object<string,PercyClient.Resource>} resourceManifestDict
  */
 async function uploadMissingResources(
     buildId, missingResources, resourceManifestDict) {
@@ -360,8 +359,8 @@ async function uploadMissingResources(
       var promise = percyClient.uploadResource(buildId, content);
       promise.then((response) => {
         console.log(
-          `[percy] Uploaded new build resource: ${resource.resourceUrl}`);
-    }, handlePercyFailure);
+            `[percy] Uploaded new build resource: ${resource.resourceUrl}`);
+      }, handlePercyFailure);
       buildResourceUploadPromises.push(promise);
 
       return promise;
@@ -465,15 +464,23 @@ function parseMissingResources(response) {
       response.body.data.relationships['missing-resources'].data || [];
 }
 
-
+/**
+ * Displays the error in the console and exits with a non-zero exit code to
+ * trigger a failed build message in CI.
+ * @param {string} error
+ */
 function handlePercyFailure(error) {
   isPercyEnabled = false;
   console.error(
       `[percy][ERROR] API call failed, Percy has been disabled 
       for this build. ${error.toString()}`);
+  process.exit(2);
 }
 
-
+/**
+ * Logs debug information to the console.
+ * @param {Array<string>} args
+ */
 function logDebug(...args) {
   if (isDebugEnabled) {
     console.log('[percy] DEBUG', ...args);
