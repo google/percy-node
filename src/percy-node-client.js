@@ -340,7 +340,7 @@ function gatherBuildResources(percyClient, buildDirs, rootDirs) {
  * already have cached on its servers.
  * @param {number} buildId
  * @param {Array<{id: number}>} missingResources
- * @param resourceManifestDict
+ * @param {Object<string,PercyClient.Resource>} resourceManifestDict
  */
 async function uploadMissingResources(
     buildId, missingResources, resourceManifestDict) {
@@ -464,7 +464,11 @@ function parseMissingResources(response) {
       response.body.data.relationships['missing-resources'].data || [];
 }
 
-
+/**
+ * Displays the error in the console and exits with a non-zero exit code to
+ * trigger a failed build message in CI.
+ * @param {string} error
+ */
 function handlePercyFailure(error) {
   isPercyEnabled = false;
   console.error(
@@ -473,7 +477,10 @@ function handlePercyFailure(error) {
   process.exit(2);
 }
 
-
+/**
+ * Logs debug information to the console.
+ * @param {Array<string>} args
+ */
 function logDebug(...args) {
   if (isDebugEnabled) {
     console.log('[percy] DEBUG', ...args);
