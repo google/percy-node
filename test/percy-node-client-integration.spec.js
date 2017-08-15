@@ -37,7 +37,7 @@ describe('percyNodeClient', function() {
   };
 
   const API_URLS = {
-    CREATE_BUILD: '/api/v1/projects/foo/bar/builds/',
+    CREATE_BUILD: '/api/v1/repos/foo/bar/builds/',
     UPLOAD_RESOURCE: '/api/v1/builds/123/resources/',
     CREATE_SNAPSHOT: '/api/v1/builds/123/snapshots/',
     FINALIZE_SNAPSHOT: '/api/v1/snapshots/snapshot1/finalize',
@@ -103,14 +103,8 @@ describe('percyNodeClient', function() {
     beforeEach(function() {
 
       // Mock the initial build post request.
-      nockRequests.createBuild = nock('https://percy.io')
-          .post(API_URLS.CREATE_BUILD)
-          .reply(201, BUILD_RESPONSE_MOCK);
-
-      // I don't actually know what this request is. I don't see references
-      // to it in the percy-js client.
       nockRequests.buildsRequest = nock('https://percy.io')
-          .post('/api/v1/repos/foo/bar/builds/')
+          .post(API_URLS.CREATE_BUILD)
           .reply(201, BUILD_RESPONSE_MOCK);
 
       nockRequests.uploadCss = nock('https://percy.io')
@@ -134,10 +128,13 @@ describe('percyNodeClient', function() {
           enableDebugMode);
     });
 
+    afterEach(() => {
+      nock.cleanAll();
+    });
+
     it('should create a build', (done) => {
       setupPromise.then(() => {
-        nockRequests.createBuild.isDone();
-        nockRequests.buildsRequest.isDone();
+        expect(nockRequests.buildsRequest.isDone()).toBe(true);
         expect(percyNodeClient.logger.log.calls.argsFor(0)[0])
             .toBe('[percy] Setting up project "foo/bar"');
         expect(percyNodeClient.logger.log.calls.argsFor(1)[0])
@@ -150,7 +147,7 @@ describe('percyNodeClient', function() {
 
     it('should upload missing assets', (done) => {
       setupPromise.then(() => {
-        nockRequests.uploadCss.isDone();
+        expect(nockRequests.uploadCss.isDone()).toBe(true);
         expect(percyNodeClient.logger.log.calls.argsFor(2)[0])
             .toContain('[percy] Uploaded new build resource:');
         expect(percyNodeClient.logger.log.calls.argsFor(2)[0])
@@ -163,9 +160,9 @@ describe('percyNodeClient', function() {
       setupPromise.then(() => {
         percyNodeClient.snapshot('buttons', BUTTON_SNAPSHOT,
             ['small', 'large']);
-        nockRequests.uploadHtmlSnapshot.isDone();
         percyNodeClient.finalizeBuild().then(() => {
-          nockRequests.finalizeSnapshot.isDone();
+          expect(nockRequests.uploadHtmlSnapshot.isDone()).toBe(true);
+          expect(nockRequests.finalizeSnapshot.isDone()).toBe(true);
           done();
         });
       });
@@ -176,7 +173,8 @@ describe('percyNodeClient', function() {
         percyNodeClient.snapshot('buttons', BUTTON_SNAPSHOT,
              ['small', 'large']);
         percyNodeClient.finalizeBuild().then(() => {
-          nockRequests.finalizeBuild.isDone();
+          expect(nockRequests.finalizeBuild.isDone()).toBe(true);
+
           expect(percyNodeClient.logger.log.calls.argsFor(3)[0])
               .toBe('[percy] Finalizing build...');
 
