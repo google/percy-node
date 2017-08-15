@@ -19,7 +19,7 @@ This package was originally created specifically to allow testing of Express Ang
 
 
 ## How to use with Protractor
-TODO(bogusred)
+See the [Protractor guide](/docs/protractor.md)
 
 ## Contributing
 See CONTRIBUTING.md
