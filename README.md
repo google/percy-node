@@ -19,7 +19,7 @@ This package was originally created specifically to allow testing of Express Ang
 
 
 ## How to use with Protractor
-See the [Protractor guide](/google/percy-node/blob/master/docs/protractor.md)
+See the [Protractor guide](/docs/protractor.md)
 
 ## Contributing
 See CONTRIBUTING.md
