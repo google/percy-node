@@ -1,19 +1,25 @@
 # How to use percy-node with Protractor
 
-This guide details how to use percy node with [Protractor](http://www.protractortest.org/#/) which is ideal for end to end tests for AngularJS apps or Angular (2+) apps.
+This guide details how to use `percy-node` with [Protractor](http://www.protractortest.org/#/) which is ideal for end to end tests for AngularJS apps or Angular (2+) apps.
 
 **Note:** We haven't actually verified this works with Angular2+ yet so if you are able to get it working, please let us know. We welcome contributions to this documentation.
 
-## Configuration
+- [Configuration](#config)
+  - [Directories and Breakpoints](#constants)
+  - [onPrepare](#onprepare)
+  - [onComplete](#oncomplete)
+- [Test helpers](#helpers)
+- [Test specs](#specs)
+
+## <a name="config"></a> Configuration
 
 We assume you've already successfully gotten protractor to launch your server and execute some tests against your app. If you haven't gotten this far yet, please read the [Protractor tutorial](http://www.protractortest.org/#/tutorial)
 
-### Configure directories
+### <a name="constants"></a> Directories and Breakpoints
 
-At the top of your protractor configuration file (e.g. `conf.js`), declare the constants `ASSET_DIRS` and `PATHS_TO_REPLACE`
+At the top of your protractor configuration file (e.g. `conf.js`), declare the constants `ASSET_DIRS`, `PATHS_TO_REPLACE`, and `BREAKPOINT_WIDTH`.
 
-`conf.js`
-
+conf.js
 ```javascript
 const ASSET_DIRS = [
   'mysite/assets/**',
@@ -56,7 +62,7 @@ This is an object where the key is the name of your breakpoint and the value is
 the pixel width of the breakpoint. You will refer to these breakpoints by name
 in your snapshots later.
 
-### Define `onPrepare`
+### <a name="onprepare"></a>  Define `onPrepare`
 
 Again, in your protractor configuration file (e.g `conf.js`), import the
 `percy-node` package and add or modify your `onPrepare` method as follows.
@@ -83,12 +89,11 @@ exports.config = {
   
   },
 };
-
-
 ```
 
 
-Here's another example for the `onPrepare` method with a custom promise and express server.
+Here's another example for the `onPrepare` method with a custom promise and 
+express server.
 
 `conf.js`
 
@@ -114,9 +119,15 @@ exports.config = {
 };
 ```
 
-### Define `onComplete`
-Continuing in your protractor configuration file, add an `onComplete` property
-to the configuration.
+### <a name="oncomplete"></a> Define `onComplete`
+
+Protractor will execute the `onComplete` method after all test specs have been 
+completed.
+
+Continuing in your protractor configuration file, we'll add an `onComplete` 
+property to the configuration to tell percy to finalize the build.
+
+
 
 `conf.js`
 
@@ -150,7 +161,7 @@ exports.config = {
 };
 ```
 
-## Create snapshot helper
+## <a name="helpers"></a> Create snapshot helper
 
 After completing the configurations above, you'll need to define a helper method
 to reuse in your test specs. Here's one you can start with but feel free to
@@ -186,7 +197,7 @@ module.exports = {snapshot};
 ```
 
 
-## Add test specs
+## <a name="specs"></a> Add test specs
 
 Now you can write your jasmine test specs. With this example, you can only have one snapshot per `it()` block unless you setup a promise pool or promise chain.
 
