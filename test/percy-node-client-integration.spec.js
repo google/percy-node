@@ -49,6 +49,9 @@ describe('percyNodeClient', function() {
       <button class="bogus">Red</button>
     </body>
   `;
+  // Hash for /assets/styles.css
+  const STYLES_ASSET_HASH = '34dcd364992c6d3620b8d9db413a0b6fc0bd536cb9911e3f434969988f216b54';
+  const BUTTONS_HTML_HASH = '57090fe7d6aa4e8cd1abcda7f8c73f8e885a8290b0da3944b5ca13e841653ce2';
 
   // TODO: Move mock to separate file.
   const BUILD_RESPONSE_MOCK = {
@@ -59,8 +62,7 @@ describe('percyNodeClient', function() {
           // An array of resources the percy api says it doesn't yet have.
           data: [
             {
-              // Hash for /assets/styles.css
-              id: '34dcd364992c6d3620b8d9db413a0b6fc0bd536cb9911e3f434969988f216b54'
+              id: STYLES_ASSET_HASH
             },
           ]
         }
@@ -104,17 +106,45 @@ describe('percyNodeClient', function() {
 
       // Mock the initial build post request.
       nockRequests.buildsRequest = nock('https://percy.io')
+          // Not asserting parameters of this post request as it's handled
+          // entirely by logic in percy-js
           .post(API_URLS.CREATE_BUILD)
           .reply(201, BUILD_RESPONSE_MOCK);
 
       nockRequests.uploadCss = nock('https://percy.io')
-          .post(API_URLS.UPLOAD_RESOURCE)
+          .post(API_URLS.UPLOAD_RESOURCE, {
+            data: {
+              type: 'resources',
+              id: STYLES_ASSET_HASH,
+              attributes: {
+                'base64-content': 'LmJvZ3VzIHsKICAgIGNvbG9yOiByZWQ7Cn0K'
+              }
+            }
+          })
           .reply(201, SUCCESS_RESPONSE_MOCK);
       nockRequests.uploadHtmlSnapshot = nock('https://percy.io')
-          .post(API_URLS.UPLOAD_RESOURCE)
+          .post(API_URLS.UPLOAD_RESOURCE, {
+            data: {
+              id: BUTTONS_HTML_HASH,
+              attributes: {
+                'base64-content': 'CiAgICA8Ym9keT4KICAgICAgPGJ1dHRvbiBjbGFzcz0iYm9ndXMiPlJlZDwvYnV0dG9uPgogICAgPC9ib2R5PgogIA==' }
+            }
+          })
           .reply(201, SUCCESS_RESPONSE_MOCK);
       nockRequests.createSnapshot = nock('https://percy.io')
-          .post(API_URLS.CREATE_SNAPSHOT)
+          .post(API_URLS.CREATE_SNAPSHOT,       {
+            data: {
+              attributes: {
+                name: 'buttons',
+                widths: [600, 1440]
+              },
+              relationships: {
+                resources: {
+                  data: [{id: BUTTONS_HTML_HASH}]
+                }
+              }
+            }
+          })
           .reply(201, CREATE_SNAPSHOT_RESPONSE_MOCK);
       nockRequests.finalizeSnapshot = nock('https://percy.io')
           .post(API_URLS.FINALIZE_SNAPSHOT)
