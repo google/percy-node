@@ -19,7 +19,7 @@ We assume you've already successfully gotten protractor to launch your server an
 
 At the top of your protractor configuration file (e.g. `conf.js`), declare the constants `ASSET_DIRS`, `PATHS_TO_REPLACE`, and `BREAKPOINT_WIDTH`.
 
-conf.js
+`conf.js`
 ```javascript
 const ASSET_DIRS = [
   'mysite/assets/**',
@@ -47,6 +47,13 @@ In this constant, define paths for your static assets such as images, compiled
 css, and optionally your compiled js. These paths should be relative starting 
 from the directory where protractor will be executed (typically starting from 
 the root of your project). It supports globs.
+
+`percy-node` will create a manifest of all of these assets, create hashes from
+the file contents, and send those hashes to the percy server. The percy service
+will respond with a list of asset hashes it does not yet have cached. Then
+`percy-node` will upload those assets to the percy service before beginning
+any of the test specs. A list of uploaded assets will be displayed in the
+console.
 
 
 #### `PATHS_TO_REPLACE`
@@ -126,8 +133,6 @@ completed.
 
 Continuing in your protractor configuration file, we'll add an `onComplete` 
 property to the configuration to tell percy to finalize the build.
-
-
 
 `conf.js`
 
