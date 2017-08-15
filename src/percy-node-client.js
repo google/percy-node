@@ -117,7 +117,7 @@ async function setup(buildDirs, rootDirs, breakpointsConfig,
   registeredBreakpoints = breakpointsConfig;
   isDebugEnabled = opt_isDebugEnabled;
   const environment = new Environment(process.env);
-  console.log(`[percy] Setting up project "${process.env.PERCY_PROJECT}"`);
+  logger.log(`[percy] Setting up project "${process.env.PERCY_PROJECT}"`);
   percyClient = new PercyClient({
     token: process.env.PERCY_TOKEN,
     clientInfo: process.env.PERCY_PROJECT,
@@ -154,7 +154,8 @@ async function setup(buildDirs, rootDirs, breakpointsConfig,
     // Here we process the response to check if percy says it's missing
     // any of the assets. For the ones it's missing, we upload them.
     var percyBuildData = buildResponse.body.data;
-    console.log('\n[percy] Build created:',
+    //console.log('PERCY BUILD RESPONSE', buildResponse.body);
+    logger.log('\n[percy] Build created:',
         percyBuildData.attributes['web-url']);
 
     // Upload all missing build resources.
@@ -262,7 +263,7 @@ function snapshot(name, content, opt_breakpoints, opt_enableJs) {
  * @return {Promise}
  */
 async function finalizeBuild() {
-  console.log('[percy] Finalizing build...');
+  logger.log('[percy] Finalizing build...');
 
   try {
     // These promises need to be processed sequentially, not concurrently.
@@ -282,7 +283,7 @@ async function finalizeBuild() {
     // Attempt to make our logging come last, giving time for test output to finish.
     var url = percyBuildData.attributes['web-url'];
     process.nextTick(function() {
-      console.log('[percy] Visual diffs are now processing:', url);
+      logger.log('[percy] Visual diffs are now processing:', url);
     });
   } catch (err) {
     handlePercyFailure(err);
@@ -358,7 +359,7 @@ async function uploadMissingResources(
       // snapshots are finalized.
       var promise = percyClient.uploadResource(buildId, content);
       promise.then((response) => {
-        console.log(
+        logger.log(
             `[percy] Uploaded new build resource: ${resource.resourceUrl}`);
       }, handlePercyFailure);
       buildResourceUploadPromises.push(promise);
@@ -488,7 +489,18 @@ function logDebug(...args) {
 }
 
 
+/**
+ * Separate logging so we can more easily spy/mock logging.
+ * @param args
+ */
+const logger = {
+  log: function(...args) {
+    console.log(...args);
+  }
+};
+
+
 /** @type {Object<string,Function>} */
 module.exports = {
-  setup, snapshot, finalizeBuild
+  setup, snapshot, finalizeBuild, logger
 };
