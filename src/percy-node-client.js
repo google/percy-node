@@ -235,6 +235,7 @@ function snapshot(name, content, opt_breakpoints, opt_enableJs) {
       var snapshotId = response.body.data.id;
 
       var missingResources = parseMissingResources(response);
+      logDebug('Missing snapshot resources', missingResources);
       uploadHtml(percyBuildData.id, snapshotId, htmlResource, missingResources,
           resolveAfterHtmlResourceUploaded);
     }, (error) => {
@@ -409,6 +410,7 @@ function uploadHtml(buildId, snapshotId, htmlResource, missingResources,
           // After we're sure all build resources are uploaded, finalize the
           // snapshot.
           Promise.all(buildResourceUploadPromises).then(function() {
+            logDebug('Snapshot id', snapshotId);
             percyClient.finalizeSnapshot(snapshotId);
           });
         });
