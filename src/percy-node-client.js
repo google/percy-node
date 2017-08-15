@@ -160,6 +160,7 @@ async function setup(buildDirs, rootDirs, breakpointsConfig,
 
     // Upload all missing build resources.
     var missingResources = parseMissingResources(buildResponse);
+    logDebug('Missing resources', missingResources);
     if (missingResources && missingResources.length > 0) {
       await uploadMissingResources(percyBuildData.id, missingResources,
           resourceManifestDict);

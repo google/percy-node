@@ -1,12 +1,12 @@
 const path = require('path');
-const assert = require('assert');
-const sinon = require('sinon');
 const percyNodeClient = require(path.join(__dirname, '..', 'src', 'percy-node-client'));
 const nock = require('nock');
 
 
 describe('percyNodeClient', function() {
-  let stubLogger;
+  // Change to true for helpful debugging.
+  const enableDebugMode = false;
+
   // Directory of assets to upload to percy (e.g. images, css)
   const BUILD_DIRS = ['test/mock-project/assets/**'];
   // Paths that shouldn't be part of the final url path.
@@ -30,11 +30,25 @@ describe('percyNodeClient', function() {
   // TODO: Move mock to separate file.
   const BUILD_RESPONSE_MOCK = {
     data: {
+      id: '123', // Unique build id for this build.
+      relationships: {
+        'missing-resources': {
+          // An array of resources the percy api says it doesn't yet have.
+          data: [
+            {
+              // Hash for /assets/styles.css
+              id: '34dcd364992c6d3620b8d9db413a0b6fc0bd536cb9911e3f434969988f216b54'
+            }
+          ]
+        }
+      },
       attributes: {
         'web-url': 'https://percy.io/foo/bar/builds/123'
       }
     }
   };
+  // relationships['missing-resources'].data
+  //
 
   const UPLOAD_RESOURCE_RESPONSE_MOCK = {success: true};
 
@@ -42,18 +56,14 @@ describe('percyNodeClient', function() {
     // Mock process environment variables.
     process.env.PERCY_TOKEN = 'abcxyz';
     process.env.PERCY_PROJECT = 'foo/bar';
-    //process.env.PERCY_BRANCH = 'foo-branch';
+    process.env.PERCY_BRANCH = 'foo-branch';
 
-    stubLogger = sinon.stub(percyNodeClient.logger, 'log').callsFake(() => {});
+    spyOn(percyNodeClient.logger, 'log');
 
     // TODO: Mock PercyClient.
   });
 
-  afterEach(function() {
-    percyNodeClient.logger.log.restore();
-  });
-
-  context('when percy is missing assets', function() {
+  describe('when percy is missing assets', function() {
     beforeEach(function() {
       // Mock the initial build post request.
       nock('https://percy.io').post(API_URLS.CREATE_BUILD)
@@ -68,23 +78,37 @@ describe('percyNodeClient', function() {
 
     });
 
-    it('should upload assets', function(done) {
+    it('should create a build', (done) => {
       const setupPromise = percyNodeClient.setup(
-          BUILD_DIRS, PATHS_TO_REPLACE, BREAKPOINT_CONFIG);
+          BUILD_DIRS, PATHS_TO_REPLACE, BREAKPOINT_CONFIG,
+          enableDebugMode);
 
       setupPromise.then(() => {
-        assert.equal(percyNodeClient.logger.log.getCall(0).args[0],
-            '[percy] Setting up project "foo/bar"');
-        assert.equal(percyNodeClient.logger.log.getCall(1).args[0],
-            '\n[percy] Build created:');
-        assert.equal(percyNodeClient.logger.log.getCall(1).args[1],
-            'https://percy.io/foo/bar/builds/123');
-        assert.equal(percyNodeClient.logger.log.getCall(2).args[0],
-            '[percy] Uploaded new build resource: /assets/styles.css',
-            'upload build resource');
-        console.log('after fourth assert');
+        expect(percyNodeClient.logger.log.calls.argsFor(0)[0])
+            .toBe('[percy] Setting up project "foo/bar"');
+        expect(percyNodeClient.logger.log.calls.argsFor(1)[0])
+            .toBe('\n[percy] Build created:');
+        expect(percyNodeClient.logger.log.calls.argsFor(1)[1])
+            .toBe('https://percy.io/foo/bar/builds/123');
         done();
       });
     });
+
+    it('should upload missing assets', (done) => {
+      const setupPromise = percyNodeClient.setup(
+          BUILD_DIRS, PATHS_TO_REPLACE, BREAKPOINT_CONFIG,
+          enableDebugMode);
+
+      setupPromise.then(() => {
+
+        expect(percyNodeClient.logger.log.calls.argsFor(2)[0])
+            .toContain('[percy] Uploaded new build resource:');
+        expect(percyNodeClient.logger.log.calls.argsFor(2)[0])
+            .toContain('/assets/styles.css');
+        done();
+      });
+    });
+
+
   });
 });
