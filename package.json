@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "sso://user/ssahim/percy-node"
+    "url": "https://github.com/google/percy-node.git"
   },
   "keywords": [
     "percy",
