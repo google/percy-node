@@ -124,7 +124,7 @@ async function setup(buildDirs, rootDirs, breakpointsConfig,
   registeredBreakpoints = breakpointsConfig;
   isDebugEnabled = opt_isDebugEnabled;
   const environment = new Environment(process.env);
-  console.log(`[percy] Setting up project "${process.env.PERCY_PROJECT}"`);
+  logger.log(`[percy] Setting up project "${process.env.PERCY_PROJECT}"`);
   percyClient = new PercyClient({
     token: process.env.PERCY_TOKEN,
     clientInfo: process.env.PERCY_PROJECT,
@@ -161,11 +161,13 @@ async function setup(buildDirs, rootDirs, breakpointsConfig,
     // Here we process the response to check if percy says it's missing
     // any of the assets. For the ones it's missing, we upload them.
     var percyBuildData = buildResponse.body.data;
-    console.log('\n[percy] Build created:',
+    //console.log('PERCY BUILD RESPONSE', buildResponse.body);
+    logger.log('\n[percy] Build created:',
         percyBuildData.attributes['web-url']);
 
     // Upload all missing build resources.
     var missingResources = parseMissingResources(buildResponse);
+    logDebug('Missing resources', missingResources);
     if (missingResources && missingResources.length > 0) {
       await uploadMissingResources(percyBuildData.id, missingResources,
           resourceManifestDict);
@@ -240,6 +242,7 @@ function snapshot(name, content, opt_breakpoints, opt_enableJs) {
       var snapshotId = response.body.data.id;
 
       var missingResources = parseMissingResources(response);
+      logDebug('Missing snapshot resources', missingResources);
       uploadHtml(percyBuildData.id, snapshotId, htmlResource, missingResources,
           resolveAfterHtmlResourceUploaded);
     }, (error) => {
@@ -269,7 +272,7 @@ function snapshot(name, content, opt_breakpoints, opt_enableJs) {
  * @return {Promise}
  */
 async function finalizeBuild() {
-  console.log('[percy] Finalizing build...');
+  logger.log('[percy] Finalizing build...');
 
   try {
     // These promises need to be processed sequentially, not concurrently.
@@ -289,7 +292,7 @@ async function finalizeBuild() {
     // Attempt to make our logging come last, giving time for test output to finish.
     var url = percyBuildData.attributes['web-url'];
     process.nextTick(function() {
-      console.log('[percy] Visual diffs are now processing:', url);
+      logger.log('[percy] Visual diffs are now processing:', url);
     });
   } catch (err) {
     handlePercyFailure(err);
@@ -365,7 +368,7 @@ async function uploadMissingResources(
       // snapshots are finalized.
       var promise = percyClient.uploadResource(buildId, content);
       promise.then((response) => {
-        console.log(
+        logger.log(
             `[percy] Uploaded new build resource: ${resource.resourceUrl}`);
       }, handlePercyFailure);
       buildResourceUploadPromises.push(promise);
@@ -414,6 +417,7 @@ function uploadHtml(buildId, snapshotId, htmlResource, missingResources,
           // After we're sure all build resources are uploaded, finalize the
           // snapshot.
           Promise.all(buildResourceUploadPromises).then(function() {
+            logDebug('Snapshot id', snapshotId);
             percyClient.finalizeSnapshot(snapshotId);
           });
         });
@@ -495,7 +499,18 @@ function logDebug(...args) {
 }
 
 
+/**
+ * Separate logging so we can more easily spy/mock logging.
+ * @param args
+ */
+const logger = {
+  log: function(...args) {
+    console.log(...args);
+  }
+};
+
+
 /** @type {Object<string,Function>} */
 module.exports = {
-  setup, snapshot, finalizeBuild
+  setup, snapshot, finalizeBuild, logger
 };
