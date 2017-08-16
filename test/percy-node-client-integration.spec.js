@@ -37,7 +37,7 @@ describe('percyNodeClient', function() {
   };
 
   const API_URLS = {
-    CREATE_BUILD: '/api/v1/repos/foo/bar/builds/',
+    CREATE_BUILD: '/api/v1/projects/foo/bar/builds/',
     UPLOAD_RESOURCE: '/api/v1/builds/123/resources/',
     CREATE_SNAPSHOT: '/api/v1/builds/123/snapshots/',
     FINALIZE_SNAPSHOT: '/api/v1/snapshots/snapshot1/finalize',
