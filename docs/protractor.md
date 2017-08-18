@@ -17,7 +17,7 @@ This guide details how to use `percy-node` with [Protractor](http://www.protract
 Install the percy-node package:
 
 ```
-npm install percy-node
+npm install percy-node --save-dev
 ```
 
 Setup your environment variables `PERCY_TOKEN` and `PERCY_PROJECT` per the [instructions on the Percy documentation](https://percy.io/docs).
