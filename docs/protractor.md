@@ -4,12 +4,23 @@ This guide details how to use `percy-node` with [Protractor](http://www.protract
 
 **Note:** We haven't actually verified this works with Angular2+ yet so if you are able to get it working, please let us know. We welcome contributions to this documentation.
 
+- [Setup](#setup)
 - [Configuration](#config)
   - [Directories and Breakpoints](#constants)
   - [onPrepare](#onprepare)
   - [onComplete](#oncomplete)
 - [Test helpers](#helpers)
 - [Test specs](#specs)
+
+## <a name="setup"></a> Setup
+
+Install the percy-node package:
+
+```
+npm install percy-node --save-dev
+```
+
+Setup your environment variables `PERCY_TOKEN` and `PERCY_PROJECT` per the [instructions on the Percy documentation](https://percy.io/docs).
 
 ## <a name="config"></a> Configuration
 
@@ -209,7 +220,7 @@ Now you can write your jasmine test specs. With this example, you can only have 
 `homepage.spec.js`
 
 ```javascript
-const protractorHelpers = require('../path/to/percy-helpers');
+const percy = require('../path/to/percy-helpers');
 
 describe(function('Homepage') {
   // Note that the function is accepting a `done` parameter.
@@ -217,7 +228,7 @@ describe(function('Homepage') {
     // Navigate to the page you want snapshots of.
     browser.get('http://localhost:9000/home');
   
-    protractorHelpers.snapshot('homepage',
+    percy.snapshot('homepage',
         ['small', 'medium'], browser, done);
   });
 });
