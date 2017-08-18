@@ -12,7 +12,12 @@
   },
   "keywords": [
     "percy",
-    "node"
+    "percy.io",
+    "node",
+    "protractor",
+    "angularjs",
+    "angular",
+    "visual regression testing"
   ],
   "engines": {
     "node": ">=7.8"
