@@ -6,10 +6,7 @@
   "scripts": {
     "test": "jasmine JASMINE_CONFIG_PATH=test/jasmine.json"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/google/percy-node.git"
-  },
+  "repository": "https://github.com/google/percy-node.git",
   "keywords": [
     "percy",
     "percy.io",
