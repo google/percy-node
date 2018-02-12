@@ -94,6 +94,65 @@ var registeredBreakpoints = {};
 
 
 /**
+ * Maximum trys to retrieve the build infomation from the Percy server.
+ * @const {number}
+ */
+let MAX_RETRIES_WHEN_PROCESSING = 1000;
+
+/**
+ * Sent another request to the Percy server if the number of tries does not exceed the limit. 
+ * @param {*} buildId Percy Build ID.
+ * @param {*} numRetries The number of get build requests to the server.
+ * @param {*} resolve Promise resolve function.
+ */
+function retry(buildId, numRetries, resolve) {
+  if (numRetries < MAX_RETRIES_WHEN_PROCESSING) {
+      // Retry with recursion with retries incremented
+      return setTimeout(getBuild, MAX_RETRIES_WHEN_PROCESSING, buildId, numRetries + 1, resolve);
+  } else {
+      console.error('Retries exceeded. Exiting.');
+  }
+}
+
+/**
+ * Retrieve the build information from the Percy server.
+ * @param {string} buildId Percy Build ID.
+ * @param {number} numRetries The number of get build requests to the server.
+ * @param {function} resolve Promise resolve function.
+ */
+async function getBuild(buildId, numRetries, resolve) {
+  const response = await percyClient.getBuild(buildId);
+  const {body: {data: {attributes}}}  = response;
+  const {state} = attributes;
+  if(state == 'processing' || state == 'pending') {
+      retry(buildId, numRetries, resolve);
+  } else if (state == 'finished'){
+    const totalDiffs = attributes['total-comparisons-diff'];
+      if (totalDiffs) {
+        const url = attributes['web-url'];
+        console.log('percy', `diffs found: ${totalDiffs}. Check ${url}`);
+        process.exit(2);
+      } else {
+        console.log('no diffs found');
+      }
+      resolve();
+  } else if (state == 'failed') {
+    console.error('percy', `build failed: ${attributes['failure-reason']}`);
+  }
+}
+
+/**
+ * Return a promise that gets build information.
+ * @param {*} buildId Percy Build ID.
+ */
+function getBuildPromise(buildId) {
+  let promise = new Promise(function(resolve, reject) {
+      getBuild(buildId, 0, resolve);
+  });
+  return promise;
+}
+
+/**
  * After app is ready, create a percy build and upload assets. Call this only
  * once per protractor test run (so in the karma onPrepare phase).
  * Call this in the protractor onPrepare() phase. It should be called only
@@ -294,6 +353,8 @@ async function finalizeBuild() {
     process.nextTick(function() {
       logger.log('[percy] Visual diffs are now processing:', url);
     });
+
+    await getBuildPromise(percyBuildData.id);
   } catch (err) {
     handlePercyFailure(err);
   }
