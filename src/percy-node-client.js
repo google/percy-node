@@ -101,30 +101,34 @@ let MAX_RETRIES_WHEN_PROCESSING = 1000;
 
 /**
  * Sent another request to the Percy server if the number of tries does not exceed the limit. 
- * @param {*} buildId Percy Build ID.
- * @param {*} numRetries The number of get build requests to the server.
- * @param {*} resolve Promise resolve function.
- */
-function retry(buildId, numRetries, resolve) {
-  if (numRetries < MAX_RETRIES_WHEN_PROCESSING) {
-      // Retry with recursion with retries incremented
-      return setTimeout(getBuild, MAX_RETRIES_WHEN_PROCESSING, buildId, numRetries + 1, resolve);
-  } else {
-      console.error('Retries exceeded. Exiting.');
-  }
-}
-
-/**
- * Retrieve the build information from the Percy server.
  * @param {string} buildId Percy Build ID.
  * @param {number} numRetries The number of get build requests to the server.
  * @param {function} resolve Promise resolve function.
  */
-async function getBuild(buildId, numRetries, resolve) {
+function retry(buildId, numRetries, resolve) {
+  if (numRetries < MAX_RETRIES_WHEN_PROCESSING) {
+      // Retry with recursion with retries incremented
+      return setTimeout(checkBuildStatus, 1000, buildId, numRetries + 1, resolve);
+  } else {
+      console.error('Retries exceeded. Exiting.');
+      process.exit(2);
+  }
+}
+
+
+/**
+ * Retrieve the build information from the Percy server, send another request to the server
+ * if the build state is processing or pending. Once the build is finished, check for diffs and
+ * display errors if there are diffs.
+ * @param {string} buildId Percy Build ID.
+ * @param {number} numRetries The number of get build requests to the server.
+ * @param {function} resolve Promise resolve function.
+ */
+async function checkBuildStatus(buildId, numRetries, resolve) {
   const response = await percyClient.getBuild(buildId);
   const {body: {data: {attributes}}}  = response;
   const {state} = attributes;
-  if(state == 'processing' || state == 'pending') {
+  if (state == 'processing' || state == 'pending') {
       retry(buildId, numRetries, resolve);
   } else if (state == 'finished'){
     const totalDiffs = attributes['total-comparisons-diff'];
@@ -133,7 +137,7 @@ async function getBuild(buildId, numRetries, resolve) {
         console.log('percy', `diffs found: ${totalDiffs}. Check ${url}`);
         process.exit(2);
       } else {
-        console.log('no diffs found');
+        console.log('Hooray! The build is successful with no diffs. \\o/');
       }
       resolve();
   } else if (state == 'failed') {
@@ -143,13 +147,13 @@ async function getBuild(buildId, numRetries, resolve) {
 
 /**
  * Return a promise that gets build information.
- * @param {*} buildId Percy Build ID.
+ * @param {string} buildId Percy Build ID.
+ * @return {Promise} Promise object gets resolved when build is finished.
  */
 function getBuildPromise(buildId) {
-  let promise = new Promise(function(resolve, reject) {
-      getBuild(buildId, 0, resolve);
+  return new Promise(function(resolve, reject) {
+    checkBuildStatus(buildId, 0, resolve);
   });
-  return promise;
 }
 
 /**
@@ -328,9 +332,10 @@ function snapshot(name, content, opt_breakpoints, opt_enableJs) {
  * Finalizes the request to be sent to Percy api which includes all the assets,
  * snapshots, etc.
  * Return this in karma onComplete() phase after all test specs have been run.
+ * @param {boolean} getDiffs Set to true to output build results.
  * @return {Promise}
  */
-async function finalizeBuild() {
+async function finalizeBuild(getDiffs = 0) {
   logger.log('[percy] Finalizing build...');
 
   try {
@@ -354,7 +359,10 @@ async function finalizeBuild() {
       logger.log('[percy] Visual diffs are now processing:', url);
     });
 
-    await getBuildPromise(percyBuildData.id);
+    if (getDiffs) {
+      await getBuildPromise(percyBuildData.id);
+    }
+
   } catch (err) {
     handlePercyFailure(err);
   }
