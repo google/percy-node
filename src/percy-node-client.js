@@ -335,7 +335,7 @@ function snapshot(name, content, opt_breakpoints, opt_enableJs) {
  * @param {boolean} getDiffs Set to true to output build results.
  * @return {Promise}
  */
-async function finalizeBuild(getDiffs = 0) {
+async function finalizeBuild(getDiffs = false) {
   logger.log('[percy] Finalizing build...');
 
   try {
