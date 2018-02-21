@@ -21,6 +21,8 @@ describe('percyNodeClient', function() {
   // Change to true for helpful debugging.
   const enableDebugMode = false;
 
+  const exitMock = process.exit;
+
   // Directory of assets to upload to percy (e.g. images, css)
   const BUILD_DIRS = ['test/mock-project/assets/**'];
   // Paths that shouldn't be part of the final url path.
@@ -42,6 +44,7 @@ describe('percyNodeClient', function() {
     CREATE_SNAPSHOT: '/api/v1/builds/123/snapshots/',
     FINALIZE_SNAPSHOT: '/api/v1/snapshots/snapshot1/finalize',
     FINALIZE_BUILD: '/api/v1/builds/123/finalize',
+    GET_BUILD: '/api/v1/builds/123',
   };
 
   const BUTTON_SNAPSHOT = `
@@ -68,7 +71,7 @@ describe('percyNodeClient', function() {
         }
       },
       attributes: {
-        'web-url': 'https://percy.io/foo/bar/builds/123'
+        'web-url': 'https://percy.io/foo/bar/builds/123',
       }
     }
   };
@@ -92,6 +95,39 @@ describe('percyNodeClient', function() {
     }
   };
 
+  const BUILD_RESULTS_RESPONSE_NO_DIFF_MOCK = {
+    data: {
+      id: '123', // Unique build id for this build.
+      attributes: {
+        'state': 'finished',
+        'total-comparisons-diff': 0,
+        'web-url': 'https://percy.io/foo/bar/builds/123',
+      }
+    }
+  };
+
+  const BUILD_RESULTS_RESPONSE_HAS_DIFF_MOCK = {
+    data: {
+      id: '123', // Unique build id for this build.
+      attributes: {
+        'state': 'finished',
+        'total-comparisons-diff': 5,
+        'web-url': 'https://percy.io/foo/bar/builds/123',
+      }
+    }
+  };
+
+  const BUILD_RESULTS_RESPONSE_FAILED_MOCK = {
+    data: {
+      id: '123', // Unique build id for this build.
+      attributes: {
+        'state': 'failed',
+        'failure-reason': 'missing_resources',
+        'web-url': 'https://percy.io/foo/bar/builds/123',
+      }
+    }
+  };
+
   beforeEach(function() {
     // Mock process environment variables.
     process.env.PERCY_TOKEN = 'abcxyz';
@@ -99,10 +135,14 @@ describe('percyNodeClient', function() {
     process.env.PERCY_BRANCH = 'foo-branch';
 
     spyOn(percyNodeClient.logger, 'log');
+    spyOn(percyNodeClient.logger, 'error');
   });
 
   describe('when percy is missing assets', function() {
     beforeEach(function() {
+
+      // Mock process.exit so the unit tests do not quit during the tests.
+      process.exit = function (){};
 
       // Mock the initial build post request.
       nockRequests.buildsRequest = nock('https://percy.io')
@@ -159,6 +199,7 @@ describe('percyNodeClient', function() {
     });
 
     afterEach(() => {
+      process.exit = exitMock;
       nock.cleanAll();
     });
 
@@ -216,6 +257,48 @@ describe('percyNodeClient', function() {
                 .toBe('https://percy.io/foo/bar/builds/123');
             done();
           }, 10);
+        });
+      });
+    });
+
+    it('should get the build successful result without diffs', (done) => {
+      nockRequests.getBuild = nock('https://percy.io')
+          .get(API_URLS.GET_BUILD)
+          .reply(201, BUILD_RESULTS_RESPONSE_NO_DIFF_MOCK);
+      setupPromise.then(() => {
+        percyNodeClient.finalizeBuild(true).then(() => {
+          expect(nockRequests.getBuild.isDone()).toBe(true);
+          expect(percyNodeClient.logger.log.calls.argsFor(5)[0])
+              .toBe('Hooray! The build is successful with no diffs. \\o/');
+          done();
+        });
+      });
+    });
+
+    it('should get the build successful result with diffs', (done) => {
+      nockRequests.getBuild = nock('https://percy.io')
+          .get(API_URLS.GET_BUILD)
+          .reply(201, BUILD_RESULTS_RESPONSE_HAS_DIFF_MOCK);
+      setupPromise.then(() => {
+        percyNodeClient.finalizeBuild(true).then(() => {
+          expect(nockRequests.getBuild.isDone()).toBe(true);
+          expect(percyNodeClient.logger.error.calls.argsFor(0).join(' '))
+              .toBe('percy diffs found: 5. Check https://percy.io/foo/bar/builds/123');
+          done();
+        });
+      });
+    });
+
+    it('should get the build failed result', (done) => {
+      nockRequests.getBuild = nock('https://percy.io')
+          .get(API_URLS.GET_BUILD)
+          .reply(201, BUILD_RESULTS_RESPONSE_FAILED_MOCK);
+      setupPromise.then(() => {
+        percyNodeClient.finalizeBuild(true).then(() => {
+          expect(nockRequests.getBuild.isDone()).toBe(true);
+          expect(percyNodeClient.logger.error.calls.argsFor(0).join(' '))
+              .toBe('percy build failed: missing_resources');
+          done();
         });
       });
     });
