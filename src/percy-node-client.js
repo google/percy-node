@@ -589,7 +589,6 @@ const logger = {
  * @param args 
  */
 function handleError(...args) {
-  console.log('THIS IS AAA');
   logger.error(...args);
   process.exit(2);
 }
