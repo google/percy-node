@@ -97,7 +97,7 @@ var registeredBreakpoints = {};
  * Maximum trys to retrieve the build infomation from the Percy server.
  * @const {number}
  */
-let MAX_RETRIES_WHEN_PROCESSING = 1000;
+const MAX_RETRIES_WHEN_PROCESSING = 1000;
 
 
 /**
@@ -276,7 +276,7 @@ function snapshot(name, content, opt_breakpoints, opt_enableJs) {
  * Sent another request to the Percy server if the number of tries does not exceed the limit. 
  * @param {string} buildId Percy Build ID.
  * @param {number} numRetries The number of get build requests to the server.
- * @param {function} resolve Promise resolve function.
+ * @param {Function} resolve Promise resolve function.
  */
 function retry(buildId, numRetries, resolve) {
   if (numRetries < MAX_RETRIES_WHEN_PROCESSING) {
@@ -294,7 +294,7 @@ function retry(buildId, numRetries, resolve) {
  * display errors if there are diffs.
  * @param {string} buildId Percy Build ID.
  * @param {number} numRetries The number of get build requests to the server.
- * @param {function} resolve Promise resolve function.
+ * @param {Function} resolve Promise resolve function.
  */
 async function checkBuildStatus(buildId, numRetries, resolve) {
   const response = await percyClient.getBuild(buildId);
@@ -334,7 +334,8 @@ function getBuildPromise(buildId) {
  * Finalizes the request to be sent to Percy api which includes all the assets,
  * snapshots, etc.
  * Return this in karma onComplete() phase after all test specs have been run.
- * @param {boolean} getDiffs Set to true to output build results.
+ * @param {boolean} getDiffs Set to true to request the build results from the server
+ * after the diffs are generated. This feature will slow down the build process.
  * @return {Promise}
  */
 async function finalizeBuild(getDiffs = false) {

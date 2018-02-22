@@ -21,7 +21,7 @@ describe('percyNodeClient', function() {
   // Change to true for helpful debugging.
   const enableDebugMode = false;
 
-  const exitMock = process.exit;
+  const exitFunc = process.exit;
 
   // Directory of assets to upload to percy (e.g. images, css)
   const BUILD_DIRS = ['test/mock-project/assets/**'];
@@ -136,13 +136,11 @@ describe('percyNodeClient', function() {
 
     spyOn(percyNodeClient.logger, 'log');
     spyOn(percyNodeClient.logger, 'error');
+    spyOn(process, 'exit');
   });
 
   describe('when percy is missing assets', function() {
     beforeEach(function() {
-
-      // Mock process.exit so the unit tests do not quit during the tests.
-      process.exit = function (){};
 
       // Mock the initial build post request.
       nockRequests.buildsRequest = nock('https://percy.io')
@@ -199,7 +197,7 @@ describe('percyNodeClient', function() {
     });
 
     afterEach(() => {
-      process.exit = exitMock;
+      process.exit = exitFunc;
       nock.cleanAll();
     });
 
@@ -284,6 +282,7 @@ describe('percyNodeClient', function() {
           expect(nockRequests.getBuild.isDone()).toBe(true);
           expect(percyNodeClient.logger.error.calls.argsFor(0).join(' '))
               .toBe('percy diffs found: 5. Check https://percy.io/foo/bar/builds/123');
+          expect(process.exit).toHaveBeenCalled();
           done();
         });
       });
@@ -298,6 +297,7 @@ describe('percyNodeClient', function() {
           expect(nockRequests.getBuild.isDone()).toBe(true);
           expect(percyNodeClient.logger.error.calls.argsFor(0).join(' '))
               .toBe('percy build failed: missing_resources');
+          expect(process.exit).toHaveBeenCalled();
           done();
         });
       });
