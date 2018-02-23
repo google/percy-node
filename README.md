@@ -16,6 +16,10 @@ Percy-node is an installable [npm package](https://www.npmjs.com/package/percy-n
 npm install percy-node --save-dev
 ```
 
+## Feature
+
+Percy-node provides the feature to return Percy build results. To enable that feature, please reach out to the Percy team to get a token with read access.
+
 ## Motivation
 This package was originally created specifically to allow testing of Express AngularJS apps tested with Jasmine, Karma, and Protractor. However, it is written in a general enough way that it could be used in another node based testing environment.
 
