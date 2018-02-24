@@ -133,6 +133,8 @@ async function setup(buildDirs, rootDirs, breakpointsConfig,
   const environment = new Environment(process.env);
   logger.log(`[percy] Setting up project "${process.env.PERCY_PROJECT}"`);
   percyClient = new PercyClient({
+    // The token has write access only by default. Please reach out to the Percy team 
+    // for a token with read access if you want to get build results from the server.
     token: process.env.PERCY_TOKEN,
     clientInfo: process.env.PERCY_PROJECT,
     environment: environment,
@@ -335,7 +337,8 @@ function getBuildPromise(buildId) {
  * snapshots, etc.
  * Return this in karma onComplete() phase after all test specs have been run.
  * @param {boolean} getDiffs Set to true to request the build results from the server
- * after the diffs are generated. This feature will slow down the build process.
+ * after the diffs are generated. This feature will slow down the build process. To use
+ * this feature, please reach out to the Percy team to get a token with read access.
  * @return {Promise}
  */
 async function finalizeBuild(getDiffs = false) {
