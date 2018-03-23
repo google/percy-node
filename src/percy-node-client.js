@@ -305,6 +305,7 @@ async function checkBuildStatus(buildId, numRetries, resolve) {
   if (state == 'processing' || state == 'pending') {
       retry(buildId, numRetries, resolve);
   } else if (state == 'finished'){
+    // Unreviewed diffs are the diffs which have not been approved in the percy UI
     const totalUnreviewed = attributes['total-snapshots-unreviewed'];
       if (totalUnreviewed) {
         const url = attributes['web-url'];
