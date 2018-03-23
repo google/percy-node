@@ -101,6 +101,7 @@ describe('percyNodeClient', function() {
       attributes: {
         'state': 'finished',
         'total-comparisons-diff': 0,
+        'total-snapshots-unreviewed': 0,
         'web-url': 'https://percy.io/foo/bar/builds/123',
       }
     }
@@ -112,6 +113,19 @@ describe('percyNodeClient', function() {
       attributes: {
         'state': 'finished',
         'total-comparisons-diff': 5,
+        'total-snapshots-unreviewed': 3,
+        'web-url': 'https://percy.io/foo/bar/builds/123',
+      }
+    }
+  };
+
+  const BUILD_RESULTS_RESPONSE_HAS_NO_UNREVIEWED_DIFF_MOCK = {
+    data: {
+      id: '123', // Unique build id for this build.
+      attributes: {
+        'state': 'finished',
+        'total-comparisons-diff': 5,
+        'total-snapshots-unreviewed': 0,
         'web-url': 'https://percy.io/foo/bar/builds/123',
       }
     }
@@ -267,7 +281,7 @@ describe('percyNodeClient', function() {
         percyNodeClient.finalizeBuild(true).then(() => {
           expect(nockRequests.getBuild.isDone()).toBe(true);
           expect(percyNodeClient.logger.log.calls.argsFor(5)[0])
-              .toBe('Hooray! The build is successful with no diffs. \\o/');
+              .toBe('Hooray! The build is successful with no unreviewed diffs. \\o/');
           done();
         });
       });
@@ -281,8 +295,22 @@ describe('percyNodeClient', function() {
         percyNodeClient.finalizeBuild(true).then(() => {
           expect(nockRequests.getBuild.isDone()).toBe(true);
           expect(percyNodeClient.logger.error.calls.argsFor(0).join(' '))
-              .toBe('percy diffs found: 5. Check https://percy.io/foo/bar/builds/123');
+              .toBe('percy unreviewed diffs found: 3. Check https://percy.io/foo/bar/builds/123');
           expect(process.exit).toHaveBeenCalled();
+          done();
+        });
+      });
+    });
+
+    it('should get the build successful result with no unreviewed diffs', (done) => {
+      nockRequests.getBuild = nock('https://percy.io')
+          .get(API_URLS.GET_BUILD)
+          .reply(201, BUILD_RESULTS_RESPONSE_HAS_NO_UNREVIEWED_DIFF_MOCK);
+      setupPromise.then(() => {
+        percyNodeClient.finalizeBuild(true).then(() => {
+          expect(nockRequests.getBuild.isDone()).toBe(true);
+          expect(percyNodeClient.logger.log.calls.argsFor(5)[0])
+              .toBe('Hooray! The build is successful with no unreviewed diffs. \\o/');
           done();
         });
       });

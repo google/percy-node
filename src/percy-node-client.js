@@ -305,12 +305,12 @@ async function checkBuildStatus(buildId, numRetries, resolve) {
   if (state == 'processing' || state == 'pending') {
       retry(buildId, numRetries, resolve);
   } else if (state == 'finished'){
-    const totalDiffs = attributes['total-comparisons-diff'];
-      if (totalDiffs) {
+    const totalUnreviewed = attributes['total-snapshots-unreviewed'];
+      if (totalUnreviewed) {
         const url = attributes['web-url'];
-        handleError('percy', `diffs found: ${totalDiffs}. Check ${url}`);
+        handleError('percy', `unreviewed diffs found: ${totalUnreviewed}. Check ${url}`);
       } else {
-        logger.log('Hooray! The build is successful with no diffs. \\o/');
+        logger.log('Hooray! The build is successful with no unreviewed diffs. \\o/');
       }
       resolve();
   } else if (state == 'failed') {
