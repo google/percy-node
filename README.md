@@ -1,5 +1,9 @@
 [![Build Status](https://travis-ci.org/google/percy-node.svg?branch=master)](https://travis-ci.org/google/percy-node)
 
+# Important notice of archive
+
+Hi there friend. The team at Google that originally started this package is no longer using Percy and thus it will no longer be maintained. For that reason, we'll be moving this to the archive. If you'd like to take ownership of it, feel free to fork it.
+
 # percy-node
 
 This is a wrapper of [percy-js](https://github.com/percy/percy-js) that simplifies the API so it can be used for automated visual regression testing in node environments such as testing an express app, an Angular app, or AngularJS app.
